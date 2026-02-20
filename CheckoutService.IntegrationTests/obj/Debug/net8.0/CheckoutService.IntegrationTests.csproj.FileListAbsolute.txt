@@ -690,3 +690,4 @@
 /Users/myles/Desktop/checkout-service-integration-tests/CheckoutService.IntegrationTests/obj/Debug/net8.0/CheckoutService.IntegrationTests.pdb
 /Users/myles/Desktop/checkout-service-integration-tests/CheckoutService.IntegrationTests/obj/Debug/net8.0/CheckoutService.IntegrationTests.genruntimeconfig.cache
 /Users/myles/Desktop/checkout-service-integration-tests/CheckoutService.IntegrationTests/obj/Debug/net8.0/ref/CheckoutService.IntegrationTests.dll
+/Users/myles/Desktop/checkout-service-integration-tests/CheckoutService.IntegrationTests/obj/Debug/net8.0/CheckoutService.IntegrationTests.sourcelink.json

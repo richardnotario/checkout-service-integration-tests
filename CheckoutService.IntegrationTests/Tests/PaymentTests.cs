@@ -20,21 +20,44 @@ public sealed class PaymentTests
     [TearDown]
     public void TearDown() => _api.Dispose();
 
-    [TestCase("4111111111111111", "APPROVED", Description = "TC-02: valid card results in APPROVED")]
-    [TestCase("4000000000000002", "DECLINED", Description = "TC-03: invalid card results in DECLINED")]
+    [TestCase("4111111111111111", "APPROVED")]
+    [TestCase("4000000000000002", "DECLINED")]
     public async Task Payment_Updates_PaymentStatus(string cardNumber, string expectedStatus)
     {
-        var items = new List<CheckoutItem>
+        var cfg = TestConfig.Load();
+        var sql = TestConfig.SqlConnectionString(cfg);
+
+        await DbCleanup.ResetAsync(sql);
+
+        // 1) Create sale via /checkout
+        var checkoutRes = await _api.CheckoutAsync(new[]
         {
-            new("ABC", 12.34m),
-            new("XYZ", 1.00m)
-        };
+            new CheckoutItem("ABC", 12.34m),
+            new CheckoutItem("XYZ", 1.00m),
+        });
 
-        var checkout = await _api.CheckoutAsync(items);
+        var saleId = checkoutRes.SaleId;   // ✅
+        var amount = checkoutRes.Total;    // ✅
 
-        var payRes = await _api.PayAsync(checkout.saleId, cardNumber, checkout.total);
-        Assert.That(payRes.IsSuccessStatusCode, Is.True, "Expected 2xx from /payment.");
+        // 2) Pay that exact saleId
+        var payRes = await _api.PayAsync(saleId, cardNumber, amount);
 
-        await _db.AssertPaymentStatusAsync(checkout.saleId, expectedStatus);
+        if (expectedStatus == "APPROVED")
+        {
+            Assert.That(payRes.IsSuccessStatusCode, Is.True,
+                $"Expected APPROVED payment to succeed but got {(int)payRes.StatusCode} {payRes.ReasonPhrase}");
+        }
+        else if (expectedStatus == "DECLINED")
+        {
+            Assert.That((int)payRes.StatusCode, Is.EqualTo(402),
+                $"Expected DECLINED payment to return 402 but got {(int)payRes.StatusCode} {payRes.ReasonPhrase}");
+        }
+        else
+        {
+            Assert.Fail($"Unexpected expectedStatus '{expectedStatus}' in test data.");
+        }
+
+        // 3) Assert that exact row
+        await _db.AssertPaymentStatusAsync(saleId, expectedStatus);
     }
 }

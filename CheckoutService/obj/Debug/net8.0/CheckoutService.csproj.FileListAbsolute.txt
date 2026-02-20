@@ -151,3 +151,4 @@
 /Users/myles/Desktop/checkout-service-integration-tests/CheckoutService/obj/Debug/net8.0/CheckoutService.pdb
 /Users/myles/Desktop/checkout-service-integration-tests/CheckoutService/obj/Debug/net8.0/CheckoutService.genruntimeconfig.cache
 /Users/myles/Desktop/checkout-service-integration-tests/CheckoutService/obj/Debug/net8.0/ref/CheckoutService.dll
+/Users/myles/Desktop/checkout-service-integration-tests/CheckoutService/obj/Debug/net8.0/CheckoutService.sourcelink.json

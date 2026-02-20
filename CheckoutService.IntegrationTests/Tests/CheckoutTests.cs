@@ -33,10 +33,10 @@ public sealed class CheckoutTests
 
         Assert.Multiple(() =>
         {
-            Assert.That(res.saleId, Is.GreaterThan(0));
-            Assert.That(res.total, Is.EqualTo(13.34m));
+            Assert.That(res.SaleId, Is.GreaterThan(0));
+            Assert.That(res.Total, Is.EqualTo(13.34m));
         });
 
-        await _db.AssertCheckoutPersistedAsync(res.saleId, 13.34m, items);
+        await _db.AssertCheckoutPersistedAsync(res.SaleId, 13.34m, items);
     }
 }

@@ -1,9 +1,14 @@
 {
-    "request": { "method": "POST", "url": "/pay" },
-    "response": {
-      "status": 200,
-      "headers": { "Content-Type": "application/json" },
-      "jsonBody": { "status": "DECLINED" }
-    }
+  "request": {
+    "method": "POST",
+    "urlPath": "/pay",
+    "bodyPatterns": [
+      { "matchesJsonPath": "$[?(@.cardNumber == '4000000000000002')]" }
+    ]
+  },
+  "response": {
+    "status": 402,
+    "headers": { "Content-Type": "application/json" },
+    "jsonBody": { "status": "DECLINED" }
   }
-  
+}
