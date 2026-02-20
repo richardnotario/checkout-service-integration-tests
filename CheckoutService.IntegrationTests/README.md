@@ -115,6 +115,28 @@ ci/
 
 ---
 
+# How the Test Structure Is Designed
+
+The integration test suite follows a clean separation-of-concerns approach:
+
+- `Tests/` → Contains scenario-driven test cases only (business behavior)
+- `Infrastructure/ApiClient.cs` → Encapsulates HTTP communication with the API
+- `Infrastructure/DbAsserts.cs` → Centralizes SQL validation logic
+- `Infrastructure/DbCleanup.cs` → Ensures test isolation between runs
+- `Infrastructure/TestConfig.cs` → Handles environment configuration loading
+
+This structure intentionally avoids:
+
+- Hard-coded URLs inside tests
+- Inline SQL queries in test methods
+- Tight coupling between test logic and infrastructure concerns
+
+Each test represents a business scenario, not an implementation detail.
+
+This keeps the automation maintainable, readable, and production-aligned.
+
+---
+
 # Running Locally
 
 ## Start the Full Stack
