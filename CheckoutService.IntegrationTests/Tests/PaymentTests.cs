@@ -36,8 +36,8 @@ public sealed class PaymentTests
             new CheckoutItem("XYZ", 1.00m),
         });
 
-        var saleId = checkoutRes.SaleId;   // ✅
-        var amount = checkoutRes.Total;    // ✅
+        var saleId = checkoutRes.SaleId;
+        var amount = checkoutRes.Total;
 
         // 2) Pay that exact saleId
         var payRes = await _api.PayAsync(saleId, cardNumber, amount);
