@@ -1,0 +1,73 @@
+name: Integration Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Build + start stack (Docker Compose)
+        working-directory: CheckoutService
+        run: |
+          docker compose up -d --build
+
+      - name: Wait for API port to respond
+        run: |
+          for i in {1..40}; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8080/ || true)
+            if [ "$code" != "000" ]; then
+              echo "API responding with HTTP $code"
+              exit 0
+            fi
+            echo "Waiting for API..."
+            sleep 3
+          done
+          echo "API did not respond in time"
+          docker ps -a
+          exit 1
+
+      - name: Run NUnit tests + Cobertura coverage (test harness)
+        run: |
+          dotnet test CheckoutService.IntegrationTests/CheckoutService.IntegrationTests.csproj \
+            --logger "trx;LogFileName=test_results.trx" \
+            /p:CollectCoverage=true \
+            /p:CoverletOutputFormat=cobertura \
+            /p:CoverletOutput=./TestResults/coverage/ \
+            /p:Exclude="[CheckoutService]*"
+
+      - name: Upload TRX test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trx-results
+          path: '**/TestResults/**/*.trx'
+
+      - name: Upload coverage (Cobertura)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cobertura-coverage
+          path: 'CheckoutService.IntegrationTests/TestResults/coverage/coverage.cobertura.xml'
+
+      - name: Enforce 70% coverage gate
+        run: |
+          chmod +x ci/check-coverage.sh
+          ./ci/check-coverage.sh 0.70
+
+      - name: Tear down stack
+        if: always()
+        working-directory: CheckoutService
+        run: |
+          docker compose down -v

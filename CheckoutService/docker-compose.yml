@@ -1,0 +1,57 @@
+services:
+  sqlserver:
+    platform: linux/amd64
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "Str0ng!Passw0rd2026"
+    ports:
+      - "1433:1433"
+    healthcheck:
+      test:
+       [
+         "CMD-SHELL",
+         "(/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'Str0ng!Passw0rd2026' -Q 'SELECT 1' -C 2>/dev/null || /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P 'Str0ng!Passw0rd2026' -Q 'SELECT 1' -C) || exit 1"
+       ]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  db_init:
+    image: mcr.microsoft.com/mssql-tools:latest
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    volumes:
+      - ../init_db.sql:/init_db.sql:ro
+      - ../schema.sql:/schema.sql:ro
+      - ../seed-data.sql:/seed-data.sql:ro
+    command: >
+      /bin/bash -lc "
+        /opt/mssql-tools/bin/sqlcmd -S sqlserver -U sa -P 'Str0ng!Passw0rd2026' -C -d master -i /init_db.sql &&
+        /opt/mssql-tools/bin/sqlcmd -S sqlserver -U sa -P 'Str0ng!Passw0rd2026' -C -d checkoutdb -i /schema.sql &&
+        /opt/mssql-tools/bin/sqlcmd -S sqlserver -U sa -P 'Str0ng!Passw0rd2026' -C -d checkoutdb -i /seed-data.sql
+      "
+
+  payment-gateway:
+    image: wiremock/wiremock:3.9.1
+    ports:
+      - "8090:8080"
+    volumes:
+      - ./wiremock:/home/wiremock
+    command: ["--port", "8080"]
+
+  api:
+    build: .
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      db_init:
+        condition: service_completed_successfully
+      payment-gateway:
+        condition: service_started
+    environment:
+      ASPNETCORE_URLS: "http://+:8080"
+      Sql__ConnectionString: "Server=sqlserver,1433;Database=checkoutdb;User Id=sa;Password=Str0ng!Passw0rd2026;TrustServerCertificate=True;"
+    ports:
+      - "8080:8080"

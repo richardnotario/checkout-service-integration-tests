@@ -1,0 +1,15 @@
+{
+    "request": {
+      "method": "POST",
+      "url": "/pay",
+      "bodyPatterns": [
+        { "matchesJsonPath": "$[?(@.cardNumber == '4111111111111111')]" }
+      ]
+    },
+    "response": {
+      "status": 200,
+      "headers": { "Content-Type": "application/json" },
+      "jsonBody": { "status": "APPROVED" }
+    }
+  }
+  

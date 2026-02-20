@@ -1,0 +1,8 @@
+/Users/myles/Automated-QA-Test-Engineer-Take-Home-Evaluation/CheckoutService.IntegrationTests/obj/Debug/net10.0/CheckoutService.IntegrationTests.csproj.AssemblyReference.cache
+/Users/myles/Automated-QA-Test-Engineer-Take-Home-Evaluation/CheckoutService.IntegrationTests/obj/Debug/net10.0/CheckoutService.IntegrationTests.GeneratedMSBuildEditorConfig.editorconfig
+/Users/myles/Automated-QA-Test-Engineer-Take-Home-Evaluation/CheckoutService.IntegrationTests/obj/Debug/net10.0/CheckoutService.IntegrationTests.gentestingplatformentrypointinputcache.cache
+/Users/myles/Automated-QA-Test-Engineer-Take-Home-Evaluation/CheckoutService.IntegrationTests/obj/Debug/net10.0/CheckoutService.IntegrationTests.genautoregisteredextensionsinputcache.cache
+/Users/myles/Automated-QA-Test-Engineer-Take-Home-Evaluation/CheckoutService.IntegrationTests/obj/Debug/net10.0/CheckoutService.IntegrationTests.AssemblyInfoInputs.cache
+/Users/myles/Automated-QA-Test-Engineer-Take-Home-Evaluation/CheckoutService.IntegrationTests/obj/Debug/net10.0/CheckoutService.IntegrationTests.AssemblyInfo.cs
+/Users/myles/Automated-QA-Test-Engineer-Take-Home-Evaluation/CheckoutService.IntegrationTests/obj/Debug/net10.0/CheckoutService.IntegrationTests.csproj.CoreCompileInputs.cache
+/Users/myles/Automated-QA-Test-Engineer-Take-Home-Evaluation/CheckoutService.IntegrationTests/obj/Debug/net10.0/CheckoutService.IntegrationTests.sourcelink.json
