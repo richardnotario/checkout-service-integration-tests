@@ -5,6 +5,15 @@ on:
     branches: [ main ]
   pull_request:
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+    
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
 jobs:
   integration:
     runs-on: ubuntu-latest
@@ -66,8 +75,37 @@ jobs:
           chmod +x ci/check-coverage.sh
           ./ci/check-coverage.sh 0.70
 
+          - name: Generate HTML coverage report (ReportGenerator)
+          if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+          run: |
+            dotnet tool install --global dotnet-reportgenerator-globaltool
+            reportgenerator \
+              -reports:"CheckoutService.IntegrationTests/TestResults/**/coverage.cobertura.xml" \
+              -targetdir:"coverage-site" \
+              -reporttypes:Html
+            # Optional: avoid Pages 404 weirdness for deep links
+            echo "<meta http-equiv='refresh' content='0; url=index.html' />" > coverage-site/404.html
+  
+      - name: Upload coverage site artifact for GitHub Pages
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: coverage-site
+
       - name: Tear down stack
         if: always()
         working-directory: CheckoutService
         run: |
           docker compose down -v
+
+  deploy-pages:
+    needs: integration
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
