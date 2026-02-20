@@ -75,16 +75,16 @@ jobs:
           chmod +x ci/check-coverage.sh
           ./ci/check-coverage.sh 0.70
 
-          - name: Generate HTML coverage report (ReportGenerator)
-          if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-          run: |
-            dotnet tool install --global dotnet-reportgenerator-globaltool
-            reportgenerator \
-              -reports:"CheckoutService.IntegrationTests/TestResults/**/coverage.cobertura.xml" \
-              -targetdir:"coverage-site" \
-              -reporttypes:Html
-            # Optional: avoid Pages 404 weirdness for deep links
-            echo "<meta http-equiv='refresh' content='0; url=index.html' />" > coverage-site/404.html
+      - name: Generate HTML coverage report (ReportGenerator)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          dotnet tool install --global dotnet-reportgenerator-globaltool
+          reportgenerator \
+            -reports:"CheckoutService.IntegrationTests/TestResults/**/coverage.cobertura.xml" \
+            -targetdir:"coverage-site" \
+            -reporttypes:Html
+          # Optional: avoid Pages 404 weirdness for deep links
+          echo "<meta http-equiv='refresh' content='0; url=index.html' />" > coverage-site/404.html
   
       - name: Upload coverage site artifact for GitHub Pages
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
