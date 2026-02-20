@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="XPlat Code Coverage">
+        <Configuration>
+          <Format>cobertura</Format>
+
+          <!-- Force coverage to target ONLY the integration test harness assembly -->
+          <Include>[CheckoutService.IntegrationTests]*</Include>
+
+          <!-- Ensure the test assembly is included for coverage -->
+          <IncludeTestAssembly>true</IncludeTestAssembly>
+
+          <!-- Exclude build/generated noise -->
+          <ExcludeByFile>**/bin/**,**/obj/**,**/*.g.cs,**/*.Designer.cs,**/.nuget/**</ExcludeByFile>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>

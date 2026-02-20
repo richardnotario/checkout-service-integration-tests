@@ -40,11 +40,12 @@ jobs:
 
       - name: Run NUnit tests + Cobertura coverage (test harness)
         run: |
+          rm -rf CheckoutService.IntegrationTests/TestResults || true
           dotnet test CheckoutService.IntegrationTests/CheckoutService.IntegrationTests.csproj \
-            --logger "trx;LogFileName=test_results.trx" \
+            --settings ci/coverage.runsettings \
             --collect:"XPlat Code Coverage" \
             --results-directory CheckoutService.IntegrationTests/TestResults \
-            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
+            --logger "trx;LogFileName=test_results.trx"
 
       - name: Upload TRX test results
         if: always()

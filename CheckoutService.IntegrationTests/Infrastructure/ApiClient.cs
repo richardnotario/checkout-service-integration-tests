@@ -29,19 +29,8 @@ public sealed class ApiClient : IDisposable
         return _http.PostAsJsonAsync("/payment", new { saleId, cardNumber, amount });
     }
 
-    // Optional wrappers (only keep if you still want the old method names)
-    public Task<CheckoutResponse> PostCheckoutAsync(IEnumerable<CheckoutItem> items) => CheckoutAsync(items);
-
-    public async Task PostPaymentAsync(PaymentRequest req)
-    {
-        var res = await PayAsync(req.SaleId, req.CardNumber, req.Amount);
-        res.EnsureSuccessStatusCode();
-    }
-
     public void Dispose() => _http.Dispose();
 }
 
 public sealed record CheckoutItem(string sku, decimal price);
 public sealed record CheckoutResponse(long SaleId, decimal Total);
-
-public sealed record PaymentRequest(long SaleId, string CardNumber, decimal Amount);
