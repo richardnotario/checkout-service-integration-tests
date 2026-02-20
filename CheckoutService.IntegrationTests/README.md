@@ -1,76 +1,98 @@
 # Checkout Service – Integration Test Automation
 
-This repository contains a **containerized black‑box integration test** solution for `CheckoutService`.
+This repository contains a **containerized black-box integration test** solution for `CheckoutService`.
 
 It validates the API **end-to-end** by:
-- exercising the HTTP endpoints (`/checkout`, `/payment`)
-- asserting **database persistence** (header + line items + totals)
-- simulating a payment gateway via **WireMock**
-- running automatically in **GitHub Actions** with a **coverage gate (≥ 70%)**
-
-> Note: The exercise mentions PostgreSQL; this implementation uses **SQL Server (Docker)** instead. The CI goals (build → run stack → test → publish reports → fail on low coverage) remain the same.
-
----
-
-## Architecture
-
-The test environment is orchestrated with Docker Compose:
-
-- **SQL Server 2022** (Docker)
-- **DB init/seed** container (Docker)
-- **WireMock** payment gateway mock (Docker)
-- **CheckoutService API** (Docker)
-- **NUnit integration tests** (runs on the host / GitHub runner)
-
-Tests interact with the system like a real client:
-1) call the API over HTTP  
-2) validate resulting DB state via direct SQL queries
+- Exercising HTTP endpoints (`/checkout`, `/payment`)
+- Verifying database persistence (header, lines, totals, payment status)
+- Simulating a payment gateway via WireMock
+- Running automatically in GitHub Actions
+- Enforcing a **coverage gate ≥ 70%**
+- Publishing a live HTML coverage report via **GitHub Pages**
 
 ---
 
-## Tech stack
+# Live Coverage Report
 
-| Concern | Tech |
-|---|---|
+The latest coverage report is automatically published from the `main` branch:
+
+➡️ https://richardnotario.github.io/checkout-service-integration-tests/
+
+## Current Metrics (CI Generated)
+
+- **Line Coverage:** 97.8%
+- **Branch Coverage:** 66.6%
+- **Coverage Gate Threshold:** 70% (enforced in CI)
+- **Status:** Passing
+
+Coverage is regenerated and redeployed on every successful push to `main`.
+
+---
+
+# Architecture Overview
+
+The integration environment is fully containerized via Docker Compose:
+
+- SQL Server 2022 (Docker)
+- Database initializer / seed container
+- WireMock payment gateway mock
+- CheckoutService API
+- NUnit integration test project (runs on CI runner)
+
+Tests execute real HTTP calls against the running API and validate database state directly.
+
+This mirrors a realistic production-like integration environment.
+
+---
+
+# Tech Stack
+
+| Concern | Technology |
+|----------|------------|
 | API | ASP.NET Core (.NET 8) |
 | Database | SQL Server 2022 (Docker) |
-| Payment mock | WireMock (Docker) |
-| Tests | NUnit (C#) |
-| DB assertions | Dapper + `Microsoft.Data.SqlClient` |
-| CI | GitHub Actions |
-| Coverage | Coverlet → Cobertura XML |
+| Payment Mock | WireMock |
+| Test Framework | NUnit |
+| Language | C# |
+| DB Assertions | Dapper + Microsoft.Data.SqlClient |
+| CI/CD | GitHub Actions |
+| Coverage | Coverlet + ReportGenerator |
+| Coverage Hosting | GitHub Pages |
 
 ---
 
-## Test coverage (what’s automated)
+# Automated Test Scenarios
 
-### Checkout persists header + lines
-- `POST /checkout`
-- Assert:
-  - `sales_hdr` created with correct total
-  - `sales_lin` records created for items
+## Checkout Persists Header & Lines
 
-### Payment approved
-- `POST /checkout`
-- `POST /payment` with **approved** card data (WireMock)
-- Assert:
+- POST `/checkout`
+- Validate:
+  - sales_hdr record created
+  - sales_lin records created
+  - Correct total aggregation
+
+## Payment Approved
+
+- POST `/checkout`
+- POST `/payment` with approved card
+- Validate:
   - HTTP success response
-  - `sales_hdr.payment_status = APPROVED`
-  - totals and lines remain correct
+  - sales_hdr.payment_status = APPROVED
+  - Totals remain correct
 
-### Payment declined
-- `POST /checkout`
-- `POST /payment` with **declined** card data (WireMock)
-- Assert:
-  - HTTP success response (or expected failure code—per API contract)
-  - `sales_hdr.payment_status = DECLINED`
-  - totals remain correct
+## Payment Declined
+
+- POST `/checkout`
+- POST `/payment` with declined card
+- Validate:
+  - HTTP response as per contract
+  - sales_hdr.payment_status = DECLINED
+  - Totals remain correct
 
 ---
 
-## Repository layout
+# Project Structure
 
-```text
 CheckoutService/
   docker-compose.yml
   Dockerfile
@@ -90,94 +112,81 @@ CheckoutService.IntegrationTests/
 
 ci/
   check-coverage.sh
-```
 
 ---
 
-## Run locally
+# Running Locally
 
-### 1) Start the stack
+## Start the Full Stack
 
 From `CheckoutService/`:
 
-```bash
 docker compose up -d --build
-```
 
 This starts:
 - SQL Server
-- DB initializer/seed
-- WireMock payment gateway
-- CheckoutService API (default: `http://localhost:8080`)
+- DB initializer
+- WireMock
+- CheckoutService API (http://localhost:8080)
 
-### 2) Run integration tests
+## Run Integration Tests
 
 From repository root:
 
-```bash
 dotnet test CheckoutService.IntegrationTests/CheckoutService.IntegrationTests.csproj
-```
 
-### 3) Run with coverage (Cobertura)
+## Run with Coverage
 
-```bash
 dotnet test CheckoutService.IntegrationTests/CheckoutService.IntegrationTests.csproj   /p:CollectCoverage=true   /p:CoverletOutputFormat=cobertura   /p:CoverletOutput=./TestResults/coverage/
-```
-
-Coverage output example:
-- `CheckoutService.IntegrationTests/TestResults/**/coverage.cobertura.xml`
 
 ---
 
-## CI pipeline (GitHub Actions)
+# CI Pipeline Responsibilities
 
-The CI pipeline performs:
+The GitHub Actions workflow performs:
 
-1. Checkout source
-2. Setup .NET SDK
-3. Restore + build
-4. Build and start Docker Compose stack
-5. Wait for API readiness
-6. Run NUnit integration tests + generate Cobertura coverage
-7. Enforce **coverage gate ≥ 70%** (`ci/check-coverage.sh`)
-8. Upload test + coverage artifacts
-9. Tear down Docker stack
+1. Restore & build
+2. Start Docker stack
+3. Wait for API readiness
+4. Execute NUnit integration tests
+5. Generate Cobertura coverage
+6. Enforce coverage ≥ 70%
+7. Generate HTML report
+8. Publish coverage to GitHub Pages
+9. Upload artifacts
+10. Tear down containers
 
-If coverage is below the threshold, the workflow fails.
-
----
-
-## Coverage strategy (why coverage is on the test harness)
-
-Because the API runs **in a separate Docker container/process**, the test runner doesn’t instrument the service assembly by default.
-
-So coverage is enforced on the **integration test harness** (tests + infrastructure helpers), which:
-- keeps the CI requirement meaningful (coverage gate works)
-- ensures the automation layer remains maintainable and exercised
-
-If needed, **service-level coverage** can be added later by instrumenting the API container (e.g., running tests inside the same process space or exporting coverage from the container).
+If coverage drops below 70%, the pipeline fails.
 
 ---
 
-## Design decisions
+# Coverage Strategy
 
-- **Containerized integration testing:** CI validates the real runtime composition (API + DB + external dependency).
-- **WireMock for payments:** deterministic APPROVED/DECLINED responses; no external flakiness.
-- **Dapper for DB assertions:** lightweight, fast, readable queries.
-- **Test infrastructure separation:** config, API client, DB asserts/cleanup kept out of test methods for clarity.
+Because the API runs in a separate Docker container process,
+the integration test runner does not instrument the service assembly directly.
 
----
+Therefore:
 
-## Future enhancements (optional)
+- Coverage is enforced on the integration test harness
+- This guarantees maintainability and quality of the automation layer
+- The approach remains a true black-box integration test
 
-- Additional negative/validation tests (bad payloads, missing fields, invalid sale id)
-- Stronger isolation between tests (per-test transaction or schema reset strategy)
-- Parallel execution (where DB + data model allow)
-- HTML reporting (Allure, ReportGenerator)
+Service-level instrumentation could be added later if required.
 
 ---
 
-## Author
+# Design Decisions
 
-**Myles Notario**  
+- Fully containerized integration testing  
+- Deterministic payment simulation via WireMock  
+- Lightweight DB assertions via Dapper  
+- Clean separation of test infrastructure  
+- Automated coverage gating  
+- Automated coverage publishing  
+
+---
+
+# Author
+
+Myles Notario  
 QA Automation Engineer
